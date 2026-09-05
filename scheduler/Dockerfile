@@ -5,15 +5,19 @@
 FROM python:3.11-slim
 
 ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+# cdn.playwright.dev 与 storage.googleapis.com 国内不可达，改走 npmmirror 镜像
+ENV PLAYWRIGHT_DOWNLOAD_HOST=https://cdn.npmmirror.com/binaries/playwright
 
 # 配置国内镜像源
 RUN sed -i 's|deb.debian.org|mirrors.aliyun.com|g' /etc/apt/sources.list.d/debian.sources 2>/dev/null || \
     sed -i 's|deb.debian.org|mirrors.aliyun.com|g' /etc/apt/sources.list 2>/dev/null || true
-RUN pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
+RUN pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple && \
+    pip config set global.timeout 120 && \
+    pip config set global.retries 10
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y curl ca-certificates gcc \
+RUN apt-get update && apt-get install -y curl ca-certificates gcc python3-dev build-essential \
     && update-ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
